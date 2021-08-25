@@ -4,8 +4,12 @@ import java.lang.Exception
 class Blocks(private val blocks: List<BlockId>, private val palette: BlockPalette, private val size: Size) {
 
     fun blocksOfType(type: BlockType): Set<Position> {
-        val id = palette.idForType(type)
-        return blocks.filter { it == id }.map { it.toPosition(size) }.toSet()
+        val id = palette.idForType(type) ?: return setOf()
+        return blocks
+            .withIndex()
+            .filter { it.value == id }
+            .map { it.index.toPosition(size) }
+            .toSet()
     }
 
     companion object {
@@ -13,7 +17,6 @@ class Blocks(private val blocks: List<BlockId>, private val palette: BlockPalett
             val blockStatesNbt = region.getLongArray("BlockStates")?.value ?: return null
             return try {
                 val bits = chunkBitset(blockStatesNbt, size.volume, palette.bitWidth)
-                println(bits)
                 Blocks(bits, palette, size)
             } catch (e: Exception) {
                 null
@@ -28,7 +31,10 @@ class Blocks(private val blocks: List<BlockId>, private val palette: BlockPalett
     private fun Position.toIndex(size: Size) = x + (z / size.x) + (y / (size.x * size.z))
 
     private fun Int.toPosition(size: Size): Position {
-        TODO()
+        val x = this % size.x
+        val z = (this / size.x) % size.z
+        val y = this / (size.x * size.y)
+        return Position(x, y, z)
     }
 }
 

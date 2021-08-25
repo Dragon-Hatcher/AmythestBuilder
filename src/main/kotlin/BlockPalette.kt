@@ -7,17 +7,13 @@ class BlockPalette(blockTypes: List<BlockType>) {
     private val idToType: Map<BlockId, BlockType> = blockTypes.mapIndexed { i, t -> i to t }.toMap()
     private val typeToId: Map<BlockType, BlockId> = blockTypes.mapIndexed { i, t -> t to i }.toMap()
 
-    init {
-        blockTypes.forEachIndexed { i, b -> println("$i: $b") }
-    }
-
     val bitWidth: Int =
         log(blockTypes.size.toDouble(), 2.0)
         .let { ceil(it) }
         .toInt()
         .coerceAtLeast(2)
 
-    fun idForType(type: BlockType): BlockId = typeToId[type] ?: throw IllegalArgumentException("No id for the type $type.")
+    fun idForType(type: BlockType): BlockId? = typeToId[type]
 
     companion object {
         fun fromRegionNbt(region: CompoundTag): BlockPalette? {
