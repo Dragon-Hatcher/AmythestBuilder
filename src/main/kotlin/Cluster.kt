@@ -1,0 +1,1 @@
+class Cluster(private val buds: Set<Position>)
