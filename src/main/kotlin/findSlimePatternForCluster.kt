@@ -6,29 +6,32 @@ fun findSlimePatternForCluster(cluster: Cluster) {
     val all = getAllPoints(crystals)
     val dMatrix = DistanceMatrix(all, crystals, buds)
 
-    var max = 10000
+    var max = 10000.0
 
     while (true) {
-        val new = findOneKMeansCluster(crystals, buds, crystals.size / 6, dMatrix)
-        if(new < max) {
+        val new = findOneKMeansCluster(crystals, buds, crystals.size / TARGET_SIZE, dMatrix, max)
+        if (new < max) {
             max = new
             println(max)
         }
     }
 }
 
-fun findOneKMeansCluster(crystals: BlockGroup, buds: BlockGroup, clusterCount: Int, distanceMatrix: DistanceMatrix): Int {
+const val MAX_ITERS = 100
+const val TARGET_SIZE = 8
+
+fun findOneKMeansCluster(crystals: BlockGroup, buds: BlockGroup, clusterCount: Int, distanceMatrix: DistanceMatrix, oldMax: Double): Double {
     val groupings: MutableMap<Position2D, Int> = crystals.associateWith { 0 }.toMutableMap()
     var centers = List(clusterCount) { crystals.random().toDPosition2D() }
 
     val defaultPosition = crystals.random().toDPosition2D()
 
-    val MAX_ITERS = 100
     var iters = 0
 
     while (true) {
-        if(iters > MAX_ITERS) break
+        if (iters > MAX_ITERS) break
         iters++
+
         //reassign
         for (p in groupings.keys) {
             if (groupings[p] == -1) continue
@@ -41,6 +44,25 @@ fun findOneKMeansCluster(crystals: BlockGroup, buds: BlockGroup, clusterCount: I
             groupings[p] = newGroup
         }
 
+        val groupCountInit = MutableList(clusterCount) { 0 }
+        for (g in groupings.values) {
+            if (g == -1) continue
+            groupCountInit[g] += 1
+        }
+        val sortedCenters = centers.withIndex().sortedBy { groupCountInit[it.index] }.reversed()
+        for ((i, c) in sortedCenters.withIndex()) {
+            val (centerNum, center) = c
+            if (i == sortedCenters.lastIndex) break
+            val nextCenter = sortedCenters[i + 1]
+            val nextCenterLoc = nextCenter.value.toPosition2D()
+            val points = groupings.filter { it.value == centerNum }.map { it.key }
+                .sortedBy { distanceMatrix.getDistanceFromTo(it, nextCenterLoc) }
+            val movedPoints = points.subList(0, points.size - TARGET_SIZE)
+            for (p in movedPoints) {
+                groupings[p] = nextCenter.index
+            }
+        }
+
         //calc centers
         val groupCount = MutableList(clusterCount) { 0 }
         val newCentersAccumulator = MutableList(clusterCount) { DPosition2D(0.0, 0.0) }
@@ -50,17 +72,27 @@ fun findOneKMeansCluster(crystals: BlockGroup, buds: BlockGroup, clusterCount: I
             val old = newCentersAccumulator[g]
             newCentersAccumulator[g] = DPosition2D(old.x + c.x, old.y + c.y)
         }
-        val newCenters = newCentersAccumulator.mapIndexed { i, p -> if (groupCount[i] != 0) DPosition2D(p.x / groupCount[i], p.y / groupCount[i]) else defaultPosition }
-        if(newCenters == centers) break
+        val newCenters = newCentersAccumulator.mapIndexed { i, p ->
+            if (groupCount[i] != 0) DPosition2D(
+                p.x / groupCount[i],
+                p.y / groupCount[i]
+            ) else defaultPosition
+        }
+        if (newCenters == centers) break
         centers = newCenters
     }
 
-    val groupCount = MutableList(clusterCount + 1) { 0 }
-    for ((c, g) in groupings) {
-        groupCount[g + 1] += 1
+//    groupings.prettyPrint(buds)
+    val centerLocs = centers.map { it.toPosition2D() }
+    val value = groupings.filter { it.value != -1 }.map {
+        distanceMatrix.getDistanceFromTo(it.key, centerLocs[it.value])
+    }.sum() / groupings.size.toDouble()
+
+    if(value < oldMax) {
+        groupings.prettyPrint(buds)
     }
-    if(groupCount[0] > 5) return 10000
-    return groupCount.maxOf { it }
+
+    return value
 }
 
 fun getCrystals(cluster: Cluster, axis: Axis): BlockGroup =
