@@ -90,9 +90,9 @@ fun findOneKMeansCluster(crystals: BlockGroup, buds: BlockGroup, clusterCount: I
 
 //    groupings.prettyPrint(buds)
     val centerLocs = centers.map { it.toPosition2D() }
-    val value = groupings.filter { it.value != -1 }.map {
+    val value = groupings.filter { it.value != -1 }.maxOf {
         distanceMatrix.getDistanceFromTo(it.key, centerLocs[it.value])
-    }.sum() / groupings.size.toDouble()
+    }
 
     if(value < oldMax) {
         groupings.prettyPrint(buds)
