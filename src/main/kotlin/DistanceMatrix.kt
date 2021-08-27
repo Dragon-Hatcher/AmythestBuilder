@@ -38,7 +38,7 @@ class DistanceMatrix(
             }
         }
 
-        return distances
+        return distances.map { it.key to (it.value * it.value) }.toMap()
     }
 
     private fun getAdjacencies(p: Position2D): Set<Position2D> =
