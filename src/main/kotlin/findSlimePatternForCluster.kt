@@ -44,16 +44,19 @@ fun findOneKMeansCluster(crystals: BlockGroup, buds: BlockGroup, clusterCount: I
             groupings[p] = newGroup
         }
 
-        val groupCountInit = MutableList(clusterCount) { 0 }
-        for (g in groupings.values) {
-            if (g == -1) continue
-            groupCountInit[g] += 1
-        }
-        val sortedCenters = centers.withIndex().sortedBy { groupCountInit[it.index] }.reversed()
-        for ((i, c) in sortedCenters.withIndex()) {
+        var groupCountInit: MutableList<Int>
+        var sortedCenters = centers.withIndex().toMutableList()
+        while (sortedCenters.size > 1) {
+            groupCountInit = MutableList(clusterCount) { 0 }
+            for (g in groupings.values) {
+                if (g == -1) continue
+                groupCountInit[g] += 1
+            }
+            sortedCenters = sortedCenters.sortedBy { groupCountInit[it.index] }.reversed().toMutableList()
+            val c = sortedCenters[0]
+
             val (centerNum, center) = c
-            if (i == sortedCenters.lastIndex) break
-            val nextCenter = sortedCenters[i + 1]
+            val nextCenter = sortedCenters.subList(1, sortedCenters.size).minByOrNull { it.value.distanceTo(center) }!!
             val nextCenterLoc = nextCenter.value.toPosition2D()
             val points = groupings.filter { it.value == centerNum }.map { it.key }
                 .sortedBy { distanceMatrix.getDistanceFromTo(it, nextCenterLoc) }
@@ -61,6 +64,9 @@ fun findOneKMeansCluster(crystals: BlockGroup, buds: BlockGroup, clusterCount: I
             for (p in movedPoints) {
                 groupings[p] = nextCenter.index
             }
+
+
+            sortedCenters.removeAt(0)
         }
 
         //calc centers
