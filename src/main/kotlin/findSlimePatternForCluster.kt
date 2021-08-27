@@ -1,3 +1,4 @@
+import kotlin.math.ceil
 import kotlin.math.sqrt
 
 typealias BlockGroup = Set<Position2D>
@@ -7,11 +8,14 @@ fun findSlimePatternForCluster(cluster: Cluster) {
     val buds = cluster.budsFromSide(Axis.X)
     val all = getAllPoints(crystals)
     val dMatrix = DistanceMatrix(all, crystals, buds)
+    val clusters = ceil(crystals.size.toDouble() / TARGET_SIZE.toDouble()).toInt()
 
     var max = 10000.0
+    var iters = 0
 
     while (true) {
-        val new = findOneKMeansCluster(crystals, buds, all, crystals.size / TARGET_SIZE, dMatrix, max)
+        println(iters++)
+        val new = findOneKMeansCluster(crystals, buds, all, clusters, dMatrix, max)
         if (new < max) {
             max = new
             println(max)
@@ -30,6 +34,20 @@ fun findOneKMeansCluster(crystals: BlockGroup, buds: BlockGroup, all: BlockGroup
 
     var iters = 0
 
+    fun recalcCenters(): Boolean {
+        val newCenters = MutableList(clusterCount) { defaultPosition }
+        for (c in 0 until clusterCount) {
+            val points = groupings.filter { it.value == c }.map { it.key }
+            val newCenter = all.minByOrNull { possibleCenter ->
+                points.sumOf { distanceMatrix.getDistanceFromTo(it, possibleCenter) }
+            }!!
+            newCenters[c] = newCenter
+        }
+        val ret = newCenters != centers
+        centers = newCenters
+        return ret
+    }
+
     while (true) {
         if (iters > MAX_ITERS) break
         iters++
@@ -46,45 +64,47 @@ fun findOneKMeansCluster(crystals: BlockGroup, buds: BlockGroup, all: BlockGroup
             groupings[p] = newGroup
         }
 
+        val done = !recalcCenters()
+
         var groupCountInit: MutableList<Int>
         var sortedCenters = centers.withIndex().toMutableList()
-        while (sortedCenters.size > 1) {
+        while (true) {
             groupCountInit = MutableList(clusterCount) { 0 }
             for (g in groupings.values) {
                 if (g == -1) continue
                 groupCountInit[g] += 1
             }
+
+            if(groupCountInit.all { it <= TARGET_SIZE }) break
+
+//            println(groupCountInit)
             sortedCenters = sortedCenters.sortedBy { groupCountInit[it.index] }.reversed().toMutableList()
-            val c = sortedCenters[0]
+            val (centerNum, center) = sortedCenters[0]
             sortedCenters.removeAt(0)
 
-            val (centerNum, center) = c
             val points = groupings.filter { it.value == centerNum }.map { it.key }
                 .sortedBy { distanceMatrix.getDistanceFromTo(it, center) }.reversed()
             val movedPoints = points.subList(0, points.size - TARGET_SIZE)
             for (p in movedPoints) {
                 groupings[p] = sortedCenters.minByOrNull { distanceMatrix.getDistanceFromTo(p, it.value) }!!.index
+//                    .also {
+//                    println("$centerNum -> $it")
+//                }
             }
 
         }
+//        println("---")
 
-        //calc centers
-        val newCenters = MutableList(clusterCount) { defaultPosition }
-        for (c in 0 until clusterCount) {
-            val points = groupings.filter { it.value == c }.map { it.key }
-            val newCenter = all.minByOrNull { possibleCenter ->
-                points.sumOf { distanceMatrix.getDistanceFromTo(it, possibleCenter) }
-            }!!
-            newCenters[c] = newCenter
-        }
-        if (newCenters == centers) break
-        centers = newCenters
+        if(done) break
+
+        recalcCenters()
     }
 
 //    groupings.prettyPrint(buds)
-    val centerLocs = centers.map { it }
-    val value = groupings.filter { it.value != -1 }.maxOf {
-        distanceMatrix.getDistanceFromTo(it.key, centerLocs[it.value])
+    val value = centers.withIndex().maxOf { (centerNum, center) ->
+        val points = groupings.filter { it.value == centerNum }.map { it.key }
+        val totalDistance = points.sumOf { distanceMatrix.getDistanceFromTo(it, center) }
+        totalDistance / points.size.toDouble()
     }
 
     if(sqrt(value) < oldMax) {
@@ -141,7 +161,7 @@ private fun Map<Position2D, Int>.prettyPrint(buds: BlockGroup) {
             val group = this[p]
 //            val char = if (group == null) '.' else ('0' + group)
             val char = when {
-                group != null -> '0' + group
+                group != null -> 'A' + group
                 p in buds -> '#'
                 else -> ' '
             }

@@ -31,7 +31,7 @@ class DistanceMatrix(
                 val edgeWeight = when (neighbor) {
                     in inclusions -> 1.0
                     in exclusions -> 1000000.0
-                    else -> 1.0
+                    else -> 1.1
                 }
                 val newDistance = distances[nextPoint]!! + edgeWeight
                 distances[neighbor] = min(distances[neighbor]!!, newDistance)
