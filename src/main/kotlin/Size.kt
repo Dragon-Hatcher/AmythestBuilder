@@ -21,3 +21,5 @@ data class Size(val x: Int, val y: Int, val z: Int) {
         }
     }
 }
+
+data class Size2D(val x: Int, val y: Int)
