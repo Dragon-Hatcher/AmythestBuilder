@@ -9,10 +9,6 @@ class DistanceMatrix(
     exclusions: List<Position2D>
 ) {
 
-    init {
-        DoubleMatrix().getRow(0)
-    }
-
     private val distances = calculateDistances(points, inclusions.indices.toList(), exclusions.indices.toList())
 
     fun distanceBetween(from: PointId, to: PointId) = distances.get(from, to)
