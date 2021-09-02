@@ -12,7 +12,7 @@ class BlockPalette(blockTypes: List<BlockType>) {
 
     val bitWidth: Int =
         log(blockTypes.size.toDouble(), 2.0)
-        .let { ceil(it) }
+        .let(::ceil)
         .toInt()
         .coerceAtLeast(2)
 
