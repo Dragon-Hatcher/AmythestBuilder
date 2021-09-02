@@ -1,3 +1,5 @@
+package util
+
 fun chunkBitset(bits: LongArray, chunks: Int, chunkSize: Int): List<Int> {
     if (chunkSize > 32) throw IllegalArgumentException("chunkSize must be less than 32. Instead it was $chunkSize")
 

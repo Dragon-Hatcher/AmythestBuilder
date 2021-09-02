@@ -1,3 +1,9 @@
+package rep
+
+import Position
+import Position2D
+import util.Axis
+
 class Cluster(private val buds: Set<Position>) {
     private val crystals: Set<Position> = crystalsFromBuds(buds)
 

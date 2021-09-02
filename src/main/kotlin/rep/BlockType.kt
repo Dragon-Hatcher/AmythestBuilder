@@ -1,3 +1,5 @@
+package rep
+
 import dev.dewy.nbt.tags.CompoundTag
 
 data class BlockType(private val name: String) {
