@@ -1,9 +1,9 @@
 package load
 
-import rep.BlockType
-import rep.Cluster
 import dev.dewy.nbt.tags.CompoundTag
 import dev.dewy.nbt.tags.RootTag
+import rep.BlockType
+import rep.Cluster
 import util.Size
 
 fun readNbtIntoCluster(nbt: RootTag): Cluster? {

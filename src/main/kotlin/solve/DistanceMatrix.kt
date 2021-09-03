@@ -8,11 +8,11 @@ typealias PointId = Int
 
 class DistanceMatrix(
     points: List<Position2D>,
-    inclusions: List<Position2D>,
-    exclusions: List<Position2D>
+    inclusions: Set<Position2D>,
+    exclusions: Set<Position2D>
 ) {
 
-    private val distances = calculateDistances(points, inclusions.indices.toList(), exclusions.indices.toList())
+    private val distances = calculateDistances(points, inclusions.map { points.indexOf(it) }.toSet(), exclusions.map { points.indexOf(it) }.toSet()) //TODO
 
     fun distanceBetween(from: PointId, to: PointId) = distances.get(from, to)
 
@@ -20,8 +20,8 @@ class DistanceMatrix(
 
     private fun calculateDistances(
         points: List<Position2D>,
-        inclusions: List<PointId>,
-        exclusions: List<PointId>
+        inclusions: Set<PointId>,
+        exclusions: Set<PointId>
     ): DoubleMatrix =
         points
             .indices
@@ -32,8 +32,8 @@ class DistanceMatrix(
     private fun calculateDistancesFromPoint(
         from: PointId,
         points: List<Position2D>,
-        inclusionIds: List<PointId>,
-        exclusionIds: List<PointId>
+        inclusionIds: Set<PointId>,
+        exclusionIds: Set<PointId>
     ): DoubleArray {
         fun getAdjacencies(pId: PointId): Set<PointId> =
             points[pId]

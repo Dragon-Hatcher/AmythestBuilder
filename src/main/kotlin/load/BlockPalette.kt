@@ -1,7 +1,7 @@
 package load
 
-import rep.BlockType
 import dev.dewy.nbt.tags.CompoundTag
+import rep.BlockType
 import kotlin.math.ceil
 import kotlin.math.log
 

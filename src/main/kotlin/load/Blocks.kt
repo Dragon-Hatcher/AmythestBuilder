@@ -2,9 +2,9 @@ package load
 
 import rep.BlockType
 import Position
+import dev.dewy.nbt.tags.CompoundTag
 import util.Size
 import util.chunkBitset
-import dev.dewy.nbt.tags.CompoundTag
 import java.lang.Exception
 
 class Blocks(private val blocks: List<BlockId>, private val palette: BlockPalette, private val size: Size) {

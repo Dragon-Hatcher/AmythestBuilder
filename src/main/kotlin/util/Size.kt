@@ -15,7 +15,7 @@ data class Size(val x: Int, val y: Int, val z: Int) {
 
     companion object {
         fun fromRegionNbt(region: CompoundTag): Size? {
-            val sizeTag = region.getCompound("util.Size") ?: return null
+            val sizeTag = region.getCompound("Size") ?: return null
             val x = sizeTag.getInt("x")?.int ?: return null
             val y = sizeTag.getInt("y")?.int ?: return null
             val z = sizeTag.getInt("z")?.int ?: return null
